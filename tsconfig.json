@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "commonjs",
+    "emitDecoratorMetadata": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "pretty": true
+  },
+  "include": [
+    "lib/**/*",
+    "test/**/*",
+    "node_modules/@types/*"
+  ],
+  "exclude": [
+    ".history/"
+  ]
+}

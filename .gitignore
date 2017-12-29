@@ -1,0 +1,9 @@
+build/
+
+node_modules/
+bower_components/
+.vault/
+.idea/
+.vscode/
+
+.DS_Store

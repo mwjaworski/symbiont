@@ -1,0 +1,243 @@
+
+class Component implements IComponent {
+
+  id: string = 'a';
+  
+  // create data with constructor
+  // return attributes and behaviors for component
+
+  // add
+
+  /**
+   * 
+   * @returns {IMap<IAttribute>}
+   * @memberOf Component
+   */
+  // QUESTION are these namespaced?
+  attributes(): IMap<IAttribute> {
+    return {};
+  }
+  behaviors(): IMap<IBehavior> {
+    return {};
+  }
+
+}
+
+
+/*
+
+(( subject ))
+{
+  type: string; // 'subject'
+  parameters: {
+    id: string;
+    instructions: IExecutable[];
+    clauses: IExecutable[];
+  }
+}
+
+{{ clause  }}
+
+*/
+/**
+ * 
+ * @class HierarchyExecutionComponent
+ * @implements {IComponent}
+ */
+interface IHierarchyAttributes {
+  executionStack: IExecutable[];
+  subjects: IMap<IExecutable>;
+}
+interface IHierarchyBehaviors {
+  subject: IBehavior;
+  clause: IBehavior;
+}
+interface IHierarchyComponent extends IComponent {
+  attributes(): IHierarchyAttributes;
+  behaviors(): IHierarchyBehaviors;
+} 
+interface IHierarchyAgent {
+  subject(name: string, instructions: IExecutable[]): IExecutable;
+  clause(instructions: IExecutable[]): IExecutable;
+}
+interface IHierarchySubjectBehavior extends IBehavior {
+  create(id: string, instructions: IExecutable[]): IExecutable;
+}
+interface IHierarchyClauseBehavior extends IBehavior {
+  create(instructions: IExecutable[]): IExecutable;
+}
+class HierarchyComponent implements IHierarchyComponent {
+
+  id: string = 'hierarchy';
+  
+  private static SUBJECT: IHierarchySubjectBehavior = {
+    id: 'subject',
+    type: 'structure',
+    code: {
+      start: '((',
+      end: '))'
+    },  
+    execute(rule: IExecutable): IBehavior {
+      return this;
+    },
+    create(id: string, instructions: IExecutable[]): IExecutable {
+      return {
+        type: 'subject',
+        parameters: {
+          id,
+          instructions
+        }  
+      };
+    }
+  };
+
+  private static CLAUSE: IHierarchyClauseBehavior = {
+    id: 'clause',
+    type: 'structure',
+    code: {
+      start: '{{',
+      end: '}}'
+    },  
+    execute(rule: IExecutable): IBehavior {
+      return this;
+    },
+    create(instructions: IExecutable[]): IExecutable {
+
+      const inputs: IExecutable[] = _.filter(instructions, (_token: IExecutable): boolean => _token.type !== 'input');
+      const actions: IExecutable[] = _.difference(instructions, inputs);
+
+      return {
+        type: 'clause',
+        parameters: {
+          inputs,
+          actions
+        }  
+      };
+    }
+  };
+
+  // create data with constructor
+  // return attributes and behaviors for component
+
+  /**
+   * 
+   * @returns {IMap<IAttribute>}
+   * @memberOf Component
+   */
+  // QUESTION are these namespaced?
+  attributes(): IHierarchyAttributes {
+    return {
+      executionStack: [],
+      subjects: {}
+    };
+  }
+  behaviors(): IHierarchyBehaviors {
+    return {
+      subject: HierarchyComponent.SUBJECT,
+      clause: HierarchyComponent.CLAUSE
+    };
+  }
+
+}
+
+interface IShell {
+  readonly agent: IAgent;
+  addComponent(component: IComponent): IShell;
+}
+
+class Shell implements IShell {
+  agent: IAgent;
+
+  constructor() {
+    this.agent = this.createAgent();
+  }
+
+  private createAgent(): IAgent {
+    return {
+      attributes: {},
+      behaviors: {},
+      components: {},
+      instructions: []
+    }; 
+  }  
+
+  addComponent(component: IComponent): IShell {
+    _.merge(this.agent.attributes, component.attributes());
+    _.merge(this.agent.behaviors, component.behaviors());
+    this.agent.components[component.id] = component;
+    return this;
+  }
+}
+
+interface IMyShell extends IShell, IHierarchyAgent {
+
+}
+
+let _shell: IShell = new Shell();
+let shell: IMyShell = _shell as IMyShell; 
+
+shell.addComponent(new HierarchyComponent());
+
+shell.add(shell.subject('name', [
+  shell.clause([
+    shell.subject('hi', [])
+  ])    
+]));
+
+
+// -- //
+
+
+interface IMySymbiont extends IAgent, IHierarchyAgent {
+
+}
+
+Symbiont.register(new HierarchyComponent());
+
+let _symbiont: ISymbiont = new Symbiont({});
+let symbiont: IMySymbiont = _symbiont as IMySymbiont;
+
+// register components
+// define the agent
+// create an object for the agent so we can save/load the agent
+// but can we?
+// the agent definition is different from the symbiote
+
+hive: IHive = new Hive();
+hive.register(new HierarchyComponent());
+symbiont = hive.create(mind);
+
+collective: ICollective = new Collective();
+collective.registerComponent(new HierarchyComponent());
+agent: IAgent = Collective.createAgent(mind);
+
+interface IMind {
+
+}
+
+interface IAgent {
+
+}
+
+interface IMyAgent extends IAgent & IAgentHierarchy {
+
+}
+
+let agent: IMyAgent = new Agent(mind, [
+  new HierarchyComponent()
+]);
+
+let agent: IMyAgent = new Agent(mind, Agent.preloadComponents(mind));
+
+let mind: IMind = {
+  attributes: {
+    hierarchy: {
+      subjects: {}
+    }
+  },
+  components: {
+    hierarchy: 'hierarchy@1' 
+  },
+  instructions: []
+}
+
